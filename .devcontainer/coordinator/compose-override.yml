@@ -1,0 +1,14 @@
+services:  
+  coordinator:
+    image: dist-inf/coordinator-dev
+    build:
+      target: dev
+    volumes:
+      - .:/workspace
+      - coordinator-dev-venv:/.venv
+    environment:
+      - PYTHONPATH=/workspace/coordinator/app
+      - UV_PROJECT_ENVIRONMENT=/.venv
+
+volumes:
+  coordinator-dev-venv:

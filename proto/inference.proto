@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package inference;
+
+service Worker {
+  rpc Infer(InferRequest) returns (InferResponse);
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+}
+
+service Coordinator {
+  rpc SubmitTask(InferRequest) returns (InferResponse);
+}
+
+message InferRequest {
+  string request_id = 1;
+  string input_data = 2;
+}
+
+message InferResponse {
+  string request_id = 1;
+  string output_data = 2;
+  string worker_id = 3;
+  bool success = 4;
+  string error_message = 5;
+}
+
+message HeartbeatRequest {
+  string worker_id = 1;
+}
+
+message HeartbeatResponse {
+  bool alive = 1;
+}

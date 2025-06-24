@@ -1,0 +1,14 @@
+services:  
+  worker:
+    image: dist-inf/worker-dev
+    build:
+      target: dev
+    volumes:
+      - .:/workspace
+      - worker-dev-venv:/.venv
+    environment:
+      - PYTHONPATH=/workspace/worker/app
+      - UV_PROJECT_ENVIRONMENT=/.venv
+
+volumes:
+  worker-dev-venv:

@@ -1,0 +1,30 @@
+{
+	"name": "Worker",
+	"dockerComposeFile": [
+		"${localWorkspaceFolder}/compose.yml",
+		"compose-override.yml"
+	],
+	"service": "worker",
+	"runServices": ["worker"],
+	"shutdownAction": "none",
+	"workspaceFolder": "/workspace/worker",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-azuretools.vscode-docker",
+				"ms-python.python",
+				"ms-python.debugpy",
+				"ms-python.vscode-pylance",
+				"ms-python.autopep8",
+				"ms-python.isort"
+			],
+			"settings": {
+				"python.defaultInterpreterPath": "/.venv/bin/python",
+				"python.formatting.provider": "autopep8"
+			}
+		}
+	},
+	"initializeCommand": "podman compose down worker",
+	"postStartCommand": "uv sync",
+	"overrideCommand": true
+}

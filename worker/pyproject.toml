@@ -1,0 +1,18 @@
+[project]
+name = "worker"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "torch",
+    "grpcio",
+    "grpcio-tools",
+    "protobuf"
+]
+
+[tool.uv.sources]
+torch = { index = "pytorch" }
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true

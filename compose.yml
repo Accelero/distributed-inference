@@ -1,0 +1,21 @@
+services:
+  coordinator:
+    image: dist-inf/coordinator
+    build:
+      context: coordinator
+      target: release
+    networks:
+      - inference-net
+    ports:
+      - "50050:50050"
+
+  worker:
+    image: dist-inf/worker
+    build:
+      context: worker
+      target: release
+    networks:
+      - inference-net
+
+networks:
+  inference-net:

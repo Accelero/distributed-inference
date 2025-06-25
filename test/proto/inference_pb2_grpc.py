@@ -151,8 +151,8 @@ class CoordinatorStub(object):
         """
         self.SubmitTask = channel.unary_unary(
                 '/inference.Coordinator/SubmitTask',
-                request_serializer=proto_dot_inference__pb2.InferRequest.SerializeToString,
-                response_deserializer=proto_dot_inference__pb2.InferResponse.FromString,
+                request_serializer=proto_dot_inference__pb2.EmbedRequest.SerializeToString,
+                response_deserializer=proto_dot_inference__pb2.EmbedResponse.FromString,
                 _registered_method=True)
 
 
@@ -170,8 +170,8 @@ def add_CoordinatorServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'SubmitTask': grpc.unary_unary_rpc_method_handler(
                     servicer.SubmitTask,
-                    request_deserializer=proto_dot_inference__pb2.InferRequest.FromString,
-                    response_serializer=proto_dot_inference__pb2.InferResponse.SerializeToString,
+                    request_deserializer=proto_dot_inference__pb2.EmbedRequest.FromString,
+                    response_serializer=proto_dot_inference__pb2.EmbedResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -199,8 +199,8 @@ class Coordinator(object):
             request,
             target,
             '/inference.Coordinator/SubmitTask',
-            proto_dot_inference__pb2.InferRequest.SerializeToString,
-            proto_dot_inference__pb2.InferResponse.FromString,
+            proto_dot_inference__pb2.EmbedRequest.SerializeToString,
+            proto_dot_inference__pb2.EmbedResponse.FromString,
             options,
             channel_credentials,
             insecure,

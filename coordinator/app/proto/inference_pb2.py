@@ -24,23 +24,29 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15proto/inference.proto\x12\tinference\"6\n\x0cInferRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x12\n\ninput_data\x18\x02 \x01(\t\"s\n\rInferResponse\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x13\n\x0boutput_data\x18\x02 \x01(\t\x12\x11\n\tworker_id\x18\x03 \x01(\t\x12\x0f\n\x07success\x18\x04 \x01(\x08\x12\x15\n\rerror_message\x18\x05 \x01(\t\"%\n\x10HeartbeatRequest\x12\x11\n\tworker_id\x18\x01 \x01(\t\"\"\n\x11HeartbeatResponse\x12\r\n\x05\x61live\x18\x01 \x01(\x08\x32\x8c\x01\n\x06Worker\x12:\n\x05Infer\x12\x17.inference.InferRequest\x1a\x18.inference.InferResponse\x12\x46\n\tHeartbeat\x12\x1b.inference.HeartbeatRequest\x1a\x1c.inference.HeartbeatResponse2N\n\x0b\x43oordinator\x12?\n\nSubmitTask\x12\x17.inference.InferRequest\x1a\x18.inference.InferResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15proto/inference.proto\x12\tinference\"\x1d\n\x0c\x45mbedRequest\x12\r\n\x05texts\x18\x01 \x03(\t\"9\n\rEmbedResponse\x12(\n\nembeddings\x18\x01 \x03(\x0b\x32\x14.inference.Embedding\"7\n\x0cInferRequest\x12\x13\n\x0brequest_ids\x18\x01 \x03(\t\x12\x12\n\ninput_data\x18\x02 \x03(\t\"\x89\x01\n\rInferResponse\x12\x11\n\tworker_id\x18\x01 \x01(\t\x12\x0f\n\x07success\x18\x02 \x01(\x08\x12\x15\n\rerror_message\x18\x03 \x01(\t\x12\x13\n\x0brequest_ids\x18\x04 \x03(\t\x12(\n\nembeddings\x18\x05 \x03(\x0b\x32\x14.inference.Embedding\"\x1b\n\tEmbedding\x12\x0e\n\x06vector\x18\x01 \x03(\x02\"%\n\x10HeartbeatRequest\x12\x11\n\tworker_id\x18\x01 \x01(\t\"\"\n\x11HeartbeatResponse\x12\r\n\x05\x61live\x18\x01 \x01(\x08\x32\x8c\x01\n\x06Worker\x12:\n\x05Infer\x12\x17.inference.InferRequest\x1a\x18.inference.InferResponse\x12\x46\n\tHeartbeat\x12\x1b.inference.HeartbeatRequest\x1a\x1c.inference.HeartbeatResponse2N\n\x0b\x43oordinator\x12?\n\nSubmitTask\x12\x17.inference.EmbedRequest\x1a\x18.inference.EmbedResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'proto.inference_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_INFERREQUEST']._serialized_start=36
-  _globals['_INFERREQUEST']._serialized_end=90
-  _globals['_INFERRESPONSE']._serialized_start=92
-  _globals['_INFERRESPONSE']._serialized_end=207
-  _globals['_HEARTBEATREQUEST']._serialized_start=209
-  _globals['_HEARTBEATREQUEST']._serialized_end=246
-  _globals['_HEARTBEATRESPONSE']._serialized_start=248
-  _globals['_HEARTBEATRESPONSE']._serialized_end=282
-  _globals['_WORKER']._serialized_start=285
-  _globals['_WORKER']._serialized_end=425
-  _globals['_COORDINATOR']._serialized_start=427
-  _globals['_COORDINATOR']._serialized_end=505
+  _globals['_EMBEDREQUEST']._serialized_start=36
+  _globals['_EMBEDREQUEST']._serialized_end=65
+  _globals['_EMBEDRESPONSE']._serialized_start=67
+  _globals['_EMBEDRESPONSE']._serialized_end=124
+  _globals['_INFERREQUEST']._serialized_start=126
+  _globals['_INFERREQUEST']._serialized_end=181
+  _globals['_INFERRESPONSE']._serialized_start=184
+  _globals['_INFERRESPONSE']._serialized_end=321
+  _globals['_EMBEDDING']._serialized_start=323
+  _globals['_EMBEDDING']._serialized_end=350
+  _globals['_HEARTBEATREQUEST']._serialized_start=352
+  _globals['_HEARTBEATREQUEST']._serialized_end=389
+  _globals['_HEARTBEATRESPONSE']._serialized_start=391
+  _globals['_HEARTBEATRESPONSE']._serialized_end=425
+  _globals['_WORKER']._serialized_start=428
+  _globals['_WORKER']._serialized_end=568
+  _globals['_COORDINATOR']._serialized_start=570
+  _globals['_COORDINATOR']._serialized_end=648
 # @@protoc_insertion_point(module_scope)

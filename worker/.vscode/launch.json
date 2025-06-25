@@ -6,6 +6,7 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/app/main.py",
+            "cwd": "${workspaceFolder}/app",
             "console": "integratedTerminal"
         }
     ]

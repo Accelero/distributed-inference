@@ -8,20 +8,32 @@ service Worker {
 }
 
 service Coordinator {
-  rpc SubmitTask(InferRequest) returns (InferResponse);
+  rpc SubmitTask(EmbedRequest) returns (EmbedResponse);
+}
+
+message EmbedRequest {
+  repeated string texts = 1;
+}
+
+message EmbedResponse {
+  repeated Embedding embeddings = 1;
 }
 
 message InferRequest {
-  string request_id = 1;
-  string input_data = 2;
+  repeated string request_ids = 1;
+  repeated string input_data = 2;
 }
 
 message InferResponse {
-  string request_id = 1;
-  string output_data = 2;
-  string worker_id = 3;
-  bool success = 4;
-  string error_message = 5;
+  string worker_id = 1;
+  bool success = 2;
+  string error_message = 3;
+  repeated string request_ids = 4;
+  repeated Embedding embeddings = 5;
+}
+
+message Embedding {
+  repeated float vector = 1;
 }
 
 message HeartbeatRequest {

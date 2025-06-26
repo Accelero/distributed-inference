@@ -5,10 +5,10 @@ services:
       target: dev
     volumes:
       - .:/workspace
-      - coordinator-dev-venv:/.venv
+      - coordinator-dev-venv:/opt/venv
     environment:
       - PYTHONPATH=/workspace/coordinator/app
-      - UV_PROJECT_ENVIRONMENT=/.venv
+      # - UV_PROJECT_ENVIRONMENT=/opt/venv
 
 volumes:
   coordinator-dev-venv:

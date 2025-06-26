@@ -16,6 +16,8 @@ services:
       target: release
     networks:
       - inference-net
+    deploy:
+      replicas: 3
 
 networks:
   inference-net:

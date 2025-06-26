@@ -26,7 +26,7 @@
 				"ms-python.isort"
 			],
 			"settings": {
-				"python.defaultInterpreterPath": "/.venv/bin/python",
+				"python.defaultInterpreterPath": "/opt/venv/bin/python",
 				"python.formatting.provider": "autopep8"
 			}
 		}

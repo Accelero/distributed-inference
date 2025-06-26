@@ -24,7 +24,7 @@ def normalize(embeddings):
 class WorkerServicer(inference_pb2_grpc.WorkerServicer):
     def __init__(self):
         super().__init__()
-        self.worker_id = os.uname().nodename
+        self.worker_id = os.environ.get("HOSTNAME", os.uname().nodename)
 
     async def Infer(self, request, context):
         texts = list(request.input_data)  # tokenizer expects native Python list
@@ -37,7 +37,7 @@ class WorkerServicer(inference_pb2_grpc.WorkerServicer):
                 worker_id=self.worker_id,
                 success=False,
                 error_message="Invalid input: input_data must be a list of strings.",
-                request_ids=[],
+                ids=[],
                 embeddings=[]
             )
 
@@ -61,7 +61,7 @@ class WorkerServicer(inference_pb2_grpc.WorkerServicer):
                 worker_id=self.worker_id,
                 success=True,
                 error_message="",
-                request_ids=request.request_ids,
+                ids=request.ids,
                 embeddings=embedding_messages
             )
         except Exception as e:
@@ -72,7 +72,7 @@ class WorkerServicer(inference_pb2_grpc.WorkerServicer):
                 worker_id=self.worker_id,
                 success=False,
                 error_message=str(e),
-                request_ids=[],
+                ids=[],
                 embeddings=[]
             )
 

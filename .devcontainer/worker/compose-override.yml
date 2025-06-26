@@ -5,10 +5,10 @@ services:
       target: dev
     volumes:
       - .:/workspace
-      - worker-dev-venv:/.venv
+      - worker-dev-venv:/opt/venv
     environment:
       - PYTHONPATH=/workspace/worker/app
-      - UV_PROJECT_ENVIRONMENT=/.venv
+      # - UV_PROJECT_ENVIRONMENT=/opt/venv
 
 volumes:
   worker-dev-venv:

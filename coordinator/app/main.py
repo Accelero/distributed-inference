@@ -5,15 +5,20 @@ from proto import inference_pb2
 from proto import inference_pb2_grpc
 import itertools
 from custom_logging import logger
-import logging
+import uuid
+import time
+import socket
+import random
 
 
-MAX_BATCH_SIZE = 8
+MAX_BATCH_SIZE = 20
 MAX_WAIT = 0.01  # seconds
-WORKER_ADDRESSES = ["worker:50051"]
+# Use a single service name and port for worker discovery
+WORKER_SERVICE = "worker"
+WORKER_PORT = 50051
 
 request_queue = asyncio.Queue()
-round_robin_workers = itertools.cycle(WORKER_ADDRESSES)
+worker_ip_cycle = None
 
 class CoordinatorServicer(inference_pb2_grpc.CoordinatorServicer):
 
@@ -23,18 +28,32 @@ class CoordinatorServicer(inference_pb2_grpc.CoordinatorServicer):
         logger.debug(f"Received request with {len(request.texts)} texts")
         return await future
 
+# Helper to resolve all IPs for a service name, returning just IPs
+async def resolve_worker_ips(service_host, service_port):
+    loop = asyncio.get_event_loop()
+    infos = await loop.run_in_executor(None, lambda: socket.getaddrinfo(service_host, service_port, proto=socket.IPPROTO_TCP))
+    ips = list({info[4][0] for info in infos})
+    return ips
+
 async def batching_loop():
+    global worker_ip_cycle
+    if worker_ip_cycle is None:
+        worker_ips = await resolve_worker_ips(WORKER_SERVICE, WORKER_PORT)
+        worker_ip_cycle = itertools.cycle(worker_ips)
     while True:
-        batch_requests = []
+        requests = []
         futures = []
         all_texts = []
+        all_ids = []
         counts = []
 
         req, fut = await request_queue.get()
-        batch_requests.append(req)
+        requests.append(req)
         futures.append(fut)
         all_texts.extend(req.texts)
+        all_ids.extend([str(uuid.uuid4()) for _ in req.texts])
         counts.append(len(req.texts))
+
 
         start = asyncio.get_event_loop().time()
         while len(all_texts) < MAX_BATCH_SIZE:
@@ -45,43 +64,65 @@ async def batching_loop():
                 if len(all_texts) + len(req.texts) > MAX_BATCH_SIZE:
                     await request_queue.put((req, fut))
                     break
-                batch_requests.append(req)
+                requests.append(req)
                 futures.append(fut)
                 all_texts.extend(req.texts)
+                all_ids.extend([str(uuid.uuid4()) for _ in req.texts])
                 counts.append(len(req.texts))
             except asyncio.TimeoutError:
                 break
 
-        batch_request = inference_pb2.InferRequest(
+        worker_request = inference_pb2.InferRequest(
             input_data=all_texts,
-            request_ids=["" for _ in all_texts]  # Dummy IDs, not used
+            ids=all_ids
         )
 
-        worker_addr = next(round_robin_workers)
-        logger.info(f"Dispatching batch of {len(all_texts)} texts to {worker_addr}")
-        asyncio.create_task(dispatch_batch(batch_request, futures, counts, worker_addr))
+        # Pick the next IP in round robin for this batch
+        worker_ip = next(worker_ip_cycle)
+        worker_addr = f"{worker_ip}:{WORKER_PORT}"
+        logger.info(f"Dispatching batch of {len(worker_request.input_data)} texts to worker_ip={worker_ip} with ids={[id[:8] for id in worker_request.ids]}")
+        asyncio.create_task(dispatch_batch(worker_request, futures, counts, worker_addr))
 
-async def dispatch_batch(batch_request, futures, counts, worker_addr):
-    try:
-        async with aio.insecure_channel(worker_addr) as channel:
-            stub = inference_pb2_grpc.WorkerStub(channel)
-            batch_response = await stub.Infer(batch_request)
-            logger.info(f"Received response from {worker_addr} with {len(batch_response.embeddings)} embeddings")
-    except grpc.aio.AioRpcError as e:
-        logger.error(f"RPC error from {worker_addr}: {e}")
-        batch_response = inference_pb2.InferResponse(
-            worker_id="error",
-            success=False,
-            error_message=str(e),
-            request_ids=[],
-            embeddings=[]
-        )
+async def dispatch_batch(worker_request, futures, counts, worker_addr):
+    retry_count = 0
+    max_retries = 3
+    start_time = time.time()
+    while True:
+        try:
+            async with aio.insecure_channel(worker_addr) as channel:
+                stub = inference_pb2_grpc.WorkerStub(channel)
+                worker_response = await stub.Infer(worker_request)
+                latency = (time.time() - start_time) * 1000  # ms
+                logger.info(
+                    f"Batch processed: worker_id={worker_response.worker_id:<10} "
+                    f"ids={[id[:8] for id in worker_response.ids]} latency={latency:.2f}ms retry_count={retry_count} "
+                    f"success={worker_response.success} error={worker_response.error_message}"
+                )
+            break
+        except grpc.aio.AioRpcError as e:
+            latency = (time.time() - start_time) * 1000  # ms
+            logger.error(
+                f"Batch dispatch failed: worker_id=error ids={[id[:8] for id in worker_request.ids]} "
+                f"latency={latency:.2f}ms retry_count={retry_count} error={e}"
+            )
+            retry_count += 1
+            if retry_count > max_retries:
+                worker_response = inference_pb2.InferResponse(
+                    worker_id="error",
+                    success=False,
+                    error_message=str(e),
+                    ids=worker_request.ids,
+                    embeddings=[[] for _ in worker_request.ids]
+                )
+                break
+            await asyncio.sleep(0.1 * retry_count)
 
     idx = 0
     for fut, count in zip(futures, counts):
-        embeddings = batch_response.embeddings[idx:idx+count]
-        response = inference_pb2.EmbedResponse(embeddings=embeddings)
-        fut.set_result(response)
+        embeddings = worker_response.embeddings[idx:idx+count]
+        ids = worker_response.ids[idx:idx+count]
+        client_response = inference_pb2.EmbedResponse(ids=ids, embeddings=embeddings)
+        fut.set_result(client_response)
         idx += count
 
 async def serve():

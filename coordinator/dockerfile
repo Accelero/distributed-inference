@@ -14,16 +14,27 @@ RUN sh /uv-installer.sh && rm /uv-installer.sh
 # Ensure the installed binary is on the `PATH`
 ENV PATH="/root/.local/bin/:$PATH"
 
-# ENV UV_LINK_MODE=copy
-
-# WORKDIR /venv
-
-# RUN --mount=type=cache,target=/root/.cache/uv \
-#     --mount=type=bind,source=uv.lock,target=uv.lock \
-#     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-#     uv sync --locked --no-install-project
+# Set the venv path for uv
+ENV VIRTUAL_ENV=/opt/venv
+ENV UV_VENV_PATH=/opt/venv
 
 FROM dev as release
 
+ENV UV_COMPILE_BYTECODE=1
 
-ENTRYPOINT ["sleep", "infinity"]
+# Copy dependency files to a separate location
+WORKDIR /deps
+COPY uv.lock ./
+COPY pyproject.toml ./
+
+# Install dependencies from lockfile using cache for uv
+ENV UV_LINK_MODE=copy
+RUN --mount=type=cache,target=/root/.cache/uv \
+uv sync --locked --no-install-project --active
+
+# Copy application code
+COPY app/ /app/
+WORKDIR /app
+
+# Set entrypoint to use the venv python and run main.py
+ENTRYPOINT ["/opt/venv/bin/python", "/app/main.py"]

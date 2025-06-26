@@ -16,11 +16,12 @@ message EmbedRequest {
 }
 
 message EmbedResponse {
-  repeated Embedding embeddings = 1;
+  repeated string ids = 1;
+  repeated Embedding embeddings = 2;
 }
 
 message InferRequest {
-  repeated string request_ids = 1;
+  repeated string ids = 1;
   repeated string input_data = 2;
 }
 
@@ -28,7 +29,7 @@ message InferResponse {
   string worker_id = 1;
   bool success = 2;
   string error_message = 3;
-  repeated string request_ids = 4;
+  repeated string ids = 4;
   repeated Embedding embeddings = 5;
 }
 

@@ -11,6 +11,11 @@ dependencies = [
     "protobuf"
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pip-licenses"
+]
+
 [tool.uv.sources]
 torch = { index = "pytorch" }
 

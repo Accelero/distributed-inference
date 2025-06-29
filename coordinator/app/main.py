@@ -156,7 +156,7 @@ async def health_check_loop(interval=5):
             if k not in WorkerState.worker_ips:
                 del WorkerState.worker_health[k]
         await asyncio.gather(*(health_check_coro(ip) for ip in WorkerState.worker_ips), asyncio.sleep(interval))
-        logging.debug(f"Worker health report: {WorkerState.worker_health}")
+        logging.info(f"Worker health report: {WorkerState.worker_health}")
 
 
 async def health_check_coro(worker_ip):
@@ -171,7 +171,7 @@ async def health_check_coro(worker_ip):
             WorkerState.worker_health[worker_ip] = resp.status
     except Exception as e:
         WorkerState.worker_health[worker_ip] = StatusCode.STATUS_UNAVAILABLE
-        logging.warning(f"Health check failed for {addr}: {e}")
+        logging.error(f"Health check failed for {addr}", exc_info=True)
 
 
 async def resolve_worker_loop(interval=10):
@@ -189,8 +189,8 @@ async def resolve_worker_loop(interval=10):
             logging.debug(f"Resolved worker IPs: {WorkerState.worker_ips}")
             await inflight_semaphore.update_threshold(
                 len(WorkerState.worker_ips) * MAX_INFLIGHT_BATCHES_MULT)
-        except Exception as e:
-            logging.error(f"Could not resolve worker IPs.", exc_info=e)
+        except Exception:
+            logging.error(f"Could not resolve worker IPs.", exc_info=True)
         await asyncio.sleep(interval)
 
 
@@ -205,10 +205,10 @@ async def dispatch_coro(worker_request, futures, counts):
         try:
             worker_ip = pick_worker()
             worker_addr = f"{worker_ip}:{WORKER_PORT}"
+            start_time = time.time()
             async with aio.insecure_channel(worker_addr) as channel:
                 stub = WorkerStub(channel)
-                start_time = time.time()
-                worker_response = await stub.Infer(worker_request)
+                worker_response = await stub.Infer(worker_request, timeout=2)
                 latency = (time.time() - start_time) * 1000  # ms
                 logging.info(
                     f"Batch processed: worker_id={worker_response.worker_id:<10} "
@@ -216,10 +216,16 @@ async def dispatch_coro(worker_request, futures, counts):
                     f"code={worker_response.code} return_msg={worker_response.return_msg}"
                 )
             break
-        except grpc.aio.AioRpcError as e:
+        except grpc.aio.AioRpcError:
             logging.error(
-                f"Batch dispatch failed: worker_ip= {worker_ip} request_ids={[id[:8] for id in worker_request.ids]} "
-                f"retry_count={retry_count} error={e}")
+                f"Batch dispatch failed: worker={worker_ip}, request_ids={[id[:8] for id in worker_request.ids]} "
+                f"retry_count={retry_count}", exc_info=True)
+            retry_count += 1
+            await asyncio.sleep(0.1 * retry_count)
+        except Exception as e:
+            logging.error(
+                f"Batch dispatch failed: request_ids={[id[:8] for id in worker_request.ids]} "
+                f"retry_count={retry_count}", exc_info=True)
             retry_count += 1
             await asyncio.sleep(0.1 * retry_count)
     else:
@@ -252,7 +258,7 @@ async def dispatch_coro(worker_request, futures, counts):
                 idx += cnt
         except Exception as e:
             logging.error(
-                f"Error processing worker response: request_ids={[id[:8] for id in worker_request.ids]}, exception={e}")
+                f"Error processing worker response: request_ids={[id[:8] for id in worker_request.ids]}", exc_info=True)
             idx = 0
             for fut, cnt in zip(futures, counts):
                 ids = worker_request.ids[idx:idx+cnt]
@@ -264,7 +270,7 @@ async def dispatch_coro(worker_request, futures, counts):
                 idx += cnt
     else:
         logging.error(
-            f"Worker returned not ok: code={worker_response.code} msg={worker_response.return_msg} "
+            f"Worker returned not ok: code={worker_response.code}, msg={worker_response.return_msg}, "
             f"request_ids={[id[:8] for id in worker_request.ids]}")
         idx = 0
         for fut, cnt in zip(futures, counts):
@@ -281,19 +287,21 @@ def pick_worker():
     '''
     Pick a worker in round robin fashion, preferring healthy workers.
     '''
+    if not WorkerState.worker_ips:
+        raise RuntimeError("No workers available")
     second_choice = None
     for _ in range(len(WorkerState.worker_ips)):
-        worker_ip = WorkerState.worker_ips[WorkerState.worker_index]
         WorkerState.worker_index = (
             WorkerState.worker_index + 1) % len(WorkerState.worker_ips)
-        if WorkerState.worker_health.get(worker_ip, StatusCode.STATUS_UNAVAILABLE) == StatusCode.STATUS_OK:
+        worker_ip = WorkerState.worker_ips[WorkerState.worker_index]
+        worker_health = WorkerState.worker_health.get(worker_ip, StatusCode.STATUS_UNAVAILABLE)
+        if worker_health == StatusCode.STATUS_OK:
             return worker_ip
-        elif WorkerState.worker_health.get(worker_ip, StatusCode.STATUS_UNAVAILABLE) == StatusCode.STATUS_DEGRADED:
+        elif worker_health == StatusCode.STATUS_DEGRADED:
             second_choice = worker_ip
     if second_choice:
         return second_choice
-    logging.error("No healthy workers available.")
-    return worker_ip
+    else: raise RuntimeError("No worker available")
 
 
 async def queue_metrics_loop():

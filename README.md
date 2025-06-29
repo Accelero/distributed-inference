@@ -20,6 +20,7 @@ This project includes third-party software components. For details, see the [Thi
 ## 🏃 Running the App
 
 - Open your web browser and navigate to [localhost:3000](http://localhost:3000) to access the dashboard.
+- **Grafana Dashboard Login:** The default login for Grafana is `admin` / `admin`.
 - The app provides a simple text embedding service using SBERT.
 - The gRPC API endpoint is available at `localhost:50050` (see `proto/public.proto` for the API definition).
 - Use the provided test scripts to simulate requests and experiment with the system.

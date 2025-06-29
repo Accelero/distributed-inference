@@ -32,10 +32,10 @@ async def main(test_duration, latency_ms):
     download_pumba_image()
     generator = BurstyTrafficGenerator(
         batch_size=10,
-        rate_mean=1,
+        rate_mean=10,
         rate_noise_time_constant=1,
-        rate_noise_std=0.0,
-        timeout=1,
+        rate_noise_std=0.5,
+        timeout=10,
         validation_data_path="validation_data.jsonl",
         coordinator_addr="localhost:50050"
     )

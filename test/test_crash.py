@@ -72,7 +72,7 @@ async def main(pre_kill_time, post_kill_time):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Inject worker crash (SIGKILL) and test system response.")
-    parser.add_argument('-b', '--before', type=int, default=5, help='Seconds to wait before kill (default: 5)')
-    parser.add_argument('-a', '--after', type=int, default=10, help='Seconds to wait after kill (default: 10)')
+    parser.add_argument('-b', '--before', type=int, default=10, help='Seconds to wait before kill (default: 5)')
+    parser.add_argument('-a', '--after', type=int, default=20, help='Seconds to wait after kill (default: 10)')
     args = parser.parse_args()
     asyncio.run(main(args.before, args.after))

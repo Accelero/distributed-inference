@@ -2,31 +2,69 @@
 
 Submission for Distributed AI Engineer - Coding Challenge.
 
-## Future Improvements & Roadmap
-
-- Implement cancellation of timed out requests for workers, so that the queue quickly empties when the requests stop and no unnecessary work is done.
-- Make worker ID consistent. Make workers export their ID via health checks and also add log tags with worker ID.
-
----
-
-**Third-Party Licenses:**
+## 📄 Third-Party Licenses
 
 This project includes third-party software components. For details, see the [Third-Party Licenses](licenses/third_party_licenses.md) documentation.
 
-## Installation
+---
 
-1. Make sure WSL2 is up to date.
+## 🛠️ Installation
+
+1. **Update WSL2 (if using Windows):**
     ```powershell
     wsl --update
     ```
-2. Navigate to project root and execute
+2. **Start the Application:**
     ```powershell
     docker compose up -d
     ```
-3. Open Webbrowser on localhost:3000
 
-## Running Test Scripts
+---
 
-The test scripts in ./tests have dependencies and were developed with Python 3.13. Dependencies are listed in the pyproject.toml and can be easily installed and managed with uv. Make sure you have Python 3.13 installed and install uv via pip install uv or install the standalone version of uv and let uv this way handle the download of the Python 3.13 interpreter. The installation of standalone uv is descriped on the [official documentation](https://docs.astral.sh/uv/getting-started/installation/).
+## 🏃 Running the App
 
-After successful installation and making sure uv is on PATH, navigate to the tests folder and execute there uv sync to create a a virtual env in tests/.venv. The scripts can then be executed by activating the virtual env or running scripts via uv run ...
+- Open your web browser and navigate to [localhost:3000](http://localhost:3000) to access the dashboard.
+- The app provides a simple text embedding service using SBERT.
+- The gRPC API endpoint is available at `localhost:50050`. The API is defined in `proto/public.proto`.
+- Use the provided test scripts to simulate requests and experiment with the system.
+
+---
+
+## 🧪 Running Test Scripts
+
+Test scripts are located in the `./test` directory. They require Python 3.13 and use dependencies listed in `pyproject.toml`. The recommended way to manage dependencies is with [uv](https://docs.astral.sh/uv/getting-started/installation/):
+
+1. **Install Python 3.13** (ensure it's available on your system).
+2. **Install uv:**
+    ```shell
+    pip install uv
+    # or follow the standalone installation instructions in the uv documentation
+    ```
+3. **Set up the test environment:**
+    - Navigate to the `test` folder:
+      ```shell
+      cd test
+      ```
+    - Create a virtual environment and install dependencies:
+      ```shell
+      uv sync
+      ```
+4. **Run test scripts:**
+    - Activate the virtual environment, or run scripts directly with uv:
+      ```shell
+      uv run ./name_of_script.py
+      ```
+    - For script usage information:
+      ```shell
+      uv run name_of_script.py -h
+      ```
+
+**Note:**
+- No formal unit tests are provided. Instead, scripts are available to simulate traffic and experiment with the system.
+- The traffic generator can simulate stochastic traffic loads. Adjust parameters in its constructor to experiment with different scenarios.
+- Other scripts simulate worker loss, network latency, and packet loss. All scripts accept command-line parameters for flexible testing.
+
+## 🚀 Future Improvements & Roadmap
+
+- **Request Cancellation:** Implement cancellation of timed-out requests for workers, ensuring the queue is quickly cleared when requests stop and preventing unnecessary computation.
+- **Consistent Worker IDs:** Standardize worker IDs. Workers should export their ID via health checks and include the worker ID in all log entries for better traceability.

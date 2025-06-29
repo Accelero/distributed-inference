@@ -8,6 +8,11 @@ services:
       - inference-net
     ports:
       - "50050:50050"
+    restart: always
+    cap_add:
+    - NET_ADMIN
+    volumes:
+      - logs:/logs
 
   worker:
     image: dist-inf/worker
@@ -18,6 +23,53 @@ services:
       - inference-net
     deploy:
       replicas: 3
+    restart: always
+    volumes:
+      - logs:/logs
+    depends_on:
+      - coordinator
+
+  prometheus:
+    image: prom/prometheus:latest
+    networks:
+      - inference-net
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  loki:
+    image: grafana/loki:latest
+    networks:
+      - inference-net
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./loki/loki-config.yaml:/etc/loki/loki-config.yaml
+      - loki-data:/loki
+
+  promtail:
+    image: grafana/promtail:latest
+    networks:
+      - inference-net
+    volumes:
+      - logs:/logs
+      - ./promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml
+    command: -config.file=/etc/promtail/promtail-config.yaml
+
+  grafana:
+    image: grafana/grafana:latest
+    networks:
+      - inference-net
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana:/var/lib/grafana
 
 networks:
   inference-net:
+
+volumes:
+  grafana-data:
+    driver: local
+  logs:
+    driver: local
+  loki-data:
+    driver: local

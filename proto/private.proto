@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package text_embedding;
+
+import "proto/public.proto";
+
+service Worker {
+  rpc Infer(InferRequest) returns (InferResponse);
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+}
+
+message InferRequest {
+  repeated string ids = 1;
+  repeated string input_data = 2;
+}
+
+message InferResponse {
+  ReturnCode code = 1;
+  string return_msg = 2;
+  string worker_id = 3;
+  repeated string ids = 4;
+  repeated Embedding embeddings = 5;
+}
+
+message HeartbeatRequest {}
+
+message HeartbeatResponse {
+  StatusCode status = 1;
+}
+
+enum StatusCode {
+  STATUS_OK = 0;
+  STATUS_DEGRADED = 1;
+  STATUS_UNAVAILABLE = 2;
+}

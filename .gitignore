@@ -395,3 +395,5 @@ FodyWeavers.xsd
 
 # CMake
 out/
+
+logs/

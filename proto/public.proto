@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package text_embedding;
+
+service TextEmbedding {
+  rpc Embed(EmbedRequest) returns (EmbedResponse);
+}
+
+message EmbedRequest {
+  repeated string texts = 1;
+}
+
+message EmbedResponse {
+  ReturnCode code = 1;
+  string return_msg = 2;
+  repeated string ids = 3;
+  repeated Embedding embeddings = 4;
+}
+
+enum ReturnCode {
+  OK = 0;
+  ERROR = 1;
+}
+
+message Embedding {
+  repeated float vector = 1;
+}

@@ -24,7 +24,7 @@
 			}
 		}
 	},
-	"initializeCommand": "podman compose down worker",
+	"initializeCommand": "docker compose down worker",
 	"postStartCommand": "uv sync",
 	"overrideCommand": true
 }

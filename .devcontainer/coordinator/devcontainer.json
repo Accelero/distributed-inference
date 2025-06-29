@@ -31,7 +31,7 @@
 			}
 		}
 	},
-	"initializeCommand": "podman compose down coordinator",
+	"initializeCommand": "docker compose down coordinator",
 	"postStartCommand": "uv sync",
 	"overrideCommand": true
 }

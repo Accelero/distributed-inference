@@ -50,8 +50,10 @@ Test scripts are located in the `./test` directory. They require Python 3.13 and
       ```
     - For script usage information:
       ```shell
-      uv run name_of_script.py -h
+      uv run ./name_of_script.py -h
       ```
+
+Performance metrics such as timeout rate and queue size are highly dependent on your machine's capabilities. Experiment with the test parameters to determine how many requests your system can handle and observe its behavior under overload conditions. The rate of failed or unfulfilled requests is strongly influenced by the client-defined timeout in the test scripts and the time required by the inference engine to process each request. When the queue stacks up and the timeout set by the client is too low, fail to fullfill rate quickly goes up to 100%.
 
 **Notes:**
 - No formal unit tests are provided. Instead, scripts are available to simulate traffic and experiment with the system.
@@ -74,6 +76,7 @@ A devcontainer setup is provided to streamline development and debugging:
 ## 🚀 Future Improvements & Roadmap
 
 - **Request Cancellation:** Implement full propagation of request cancellation to workers. Currently, all requests are dispatched and processed even if the client cancels, resulting in wasted computation. Enabling cancellation would improve efficiency and resource utilization.
+- **Decline Unserviceable Requests:** Proactively reject client requests with timeouts that are too short to be fulfilled. Estimate the required processing time based on the current queue size and average per-request processing time, and immediately decline requests that cannot be serviced within the client's deadline. This prevents wasted effort and improves system responsiveness under load.
 - **Consistent Worker Identification:** Unify worker identification across the system. At present, workers are inconsistently identified by IP or container ID. Standardizing to a single, consistent worker ID (exported via health checks and used in logs) will improve traceability and maintainability.
 - **Log Quality & Observability:** Enhance log structure and quality to better leverage the Grafana/Loki stack. This includes harmonizing log fields and tags, parsing fields on ingestion, and ensuring tracebacks are stored in the `exc_info` field rather than the message. Improved logs will make monitoring, debugging, and alerting more effective.
 - **Exception Handling:** Refactor exception handling for clarity and robustness. Adopt a systematic approach: use custom exception classes where appropriate, ensure all functions have proper exception coverage, and follow best practices (e.g., only log exceptions when caught, not when raised). This will make the codebase more reliable and easier to maintain.

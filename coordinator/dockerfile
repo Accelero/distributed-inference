@@ -1,4 +1,4 @@
-FROM debian:latest as dev
+FROM debian:latest AS dev
 
 RUN apt -qy update && apt -qy install \
     curl \
@@ -19,7 +19,7 @@ ENV PATH="/root/.local/bin/:$PATH"
 # ENV VIRTUAL_ENV=/opt/venv
 ENV UV_PROJECT_ENVIRONMENT=/opt/venv
 
-FROM dev as release
+FROM dev AS release
 
 ENV UV_COMPILE_BYTECODE=1
 

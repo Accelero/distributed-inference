@@ -15,7 +15,7 @@ def embeddings_match(ref_emb, test_emb, tolerance=1e-10):
         return False
     return all(math.isclose(a, b, rel_tol=tolerance, abs_tol=tolerance) for a, b in zip(ref_emb, test_emb))
 
-class BurstyTrafficGenerator:
+class TrafficGenerator:
     def __init__(self,
                  batch_size=5,
                  rate_mean=20,
@@ -105,7 +105,7 @@ class BurstyTrafficGenerator:
 
 async def main():
     # Example: bursty traffic with custom parameters
-    generator = BurstyTrafficGenerator(
+    generator = TrafficGenerator(
         batch_size=8,
         rate_mean=30,
         rate_noise_time_constant=30,

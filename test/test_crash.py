@@ -3,7 +3,7 @@ import asyncio
 import logging
 import random
 import subprocess
-from traffic_generator import BurstyTrafficGenerator
+from traffic_generator import TrafficGenerator
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
@@ -37,16 +37,16 @@ def get_running_workers():
     workers = [name for name in result.stdout.splitlines() if "distributed-inference-worker-" in name]
     return workers
 
-async def main(pre_kill_time, post_kill_time):
+async def main(pre_kill_time, post_kill_time, batch_size, rate_mean, rate_noise_time_constant, rate_noise_std, timeout, validation_data_path, coordinator_addr):
     download_pumba_image()
-    generator = BurstyTrafficGenerator(
-        batch_size=10,
-        rate_mean=10,
-        rate_noise_time_constant=1,
-        rate_noise_std=0.0,
-        timeout=10,
-        validation_data_path="validation_data.jsonl",
-        coordinator_addr="localhost:50050"
+    generator = TrafficGenerator(
+        batch_size=batch_size,
+        rate_mean=rate_mean,
+        rate_noise_time_constant=rate_noise_time_constant,
+        rate_noise_std=rate_noise_std,
+        timeout=timeout,
+        validation_data_path=validation_data_path,
+        coordinator_addr=coordinator_addr
     )
     await generator.start()
     workers = get_running_workers()
@@ -72,7 +72,18 @@ async def main(pre_kill_time, post_kill_time):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Inject worker crash (SIGKILL) and test system response.")
-    parser.add_argument('-b', '--before', type=int, default=10, help='Seconds to wait before kill (default: 5)')
-    parser.add_argument('-a', '--after', type=int, default=20, help='Seconds to wait after kill (default: 10)')
+    parser.add_argument('-b', '--before', type=int, default=10, help='Seconds to wait before kill (default: 10)')
+    parser.add_argument('-a', '--after', type=int, default=20, help='Seconds to wait after kill (default: 20)')
+    parser.add_argument('--batch-size', type=int, default=10, help='Batch size (default: 10)')
+    parser.add_argument('--rate-mean', type=float, default=10, help='Mean request rate (default: 10)')
+    parser.add_argument('--rate-noise-time-constant', type=float, default=1, help='Rate noise time constant (default: 1)')
+    parser.add_argument('--rate-noise-std', type=float, default=0.0, help='Rate noise standard deviation (default: 0.0)')
+    parser.add_argument('--timeout', type=int, default=10, help='Request timeout in seconds (default: 10)')
+    parser.add_argument('--validation-data-path', type=str, default="validation_data.jsonl", help='Path to validation data (default: validation_data.jsonl)')
+    parser.add_argument('--coordinator-addr', type=str, default="localhost:50050", help='Coordinator gRPC address (default: localhost:50050)')
     args = parser.parse_args()
-    asyncio.run(main(args.before, args.after))
+    asyncio.run(main(
+        args.before, args.after,
+        args.batch_size, args.rate_mean, args.rate_noise_time_constant, args.rate_noise_std,
+        args.timeout, args.validation_data_path, args.coordinator_addr
+    ))

@@ -2,7 +2,7 @@ import argparse
 import asyncio
 import logging
 import subprocess
-from traffic_generator import BurstyTrafficGenerator
+from traffic_generator import TrafficGenerator
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 
@@ -28,16 +28,16 @@ def download_pumba_image():
     else:
         logging.warning(f"docker pull failed, but continuing. Output: {result.stdout}\n{result.stderr}")
 
-async def main(test_duration, loss_percent):
+async def main(test_duration, loss_percent, batch_size, rate_mean, rate_noise_time_constant, rate_noise_std, timeout, validation_data_path, coordinator_addr):
     download_pumba_image()
-    generator = BurstyTrafficGenerator(
-        batch_size=10,
-        rate_mean=1,
-        rate_noise_time_constant=1,
-        rate_noise_std=0.0,
-        timeout=1,
-        validation_data_path="validation_data.jsonl",
-        coordinator_addr="localhost:50050"
+    generator = TrafficGenerator(
+        batch_size=batch_size,
+        rate_mean=rate_mean,
+        rate_noise_time_constant=rate_noise_time_constant,
+        rate_noise_std=rate_noise_std,
+        timeout=timeout,
+        validation_data_path=validation_data_path,
+        coordinator_addr=coordinator_addr
     )
     pumba_proc = run_pumba_loss_background(
         "distributed-inference-coordinator-1",
@@ -65,5 +65,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Inject packet loss and test system response.")
     parser.add_argument('-d', '--duration', type=int, default=20, help='Test duration in seconds (default: 20)')
     parser.add_argument('-p', '--percent', type=int, default=10, help='Packet loss percent (default: 10)')
+    parser.add_argument('--batch-size', type=int, default=10, help='Batch size (default: 10)')
+    parser.add_argument('--rate-mean', type=float, default=1, help='Mean request rate (default: 1)')
+    parser.add_argument('--rate-noise-time-constant', type=float, default=1, help='Rate noise time constant (default: 1)')
+    parser.add_argument('--rate-noise-std', type=float, default=0.0, help='Rate noise standard deviation (default: 0.0)')
+    parser.add_argument('--timeout', type=int, default=1, help='Request timeout in seconds (default: 1)')
+    parser.add_argument('--validation-data-path', type=str, default="validation_data.jsonl", help='Path to validation data (default: validation_data.jsonl)')
+    parser.add_argument('--coordinator-addr', type=str, default="localhost:50050", help='Coordinator gRPC address (default: localhost:50050)')
     args = parser.parse_args()
-    asyncio.run(main(args.duration, args.percent))
+    asyncio.run(main(
+        args.duration, args.percent,
+        args.batch_size, args.rate_mean, args.rate_noise_time_constant, args.rate_noise_std,
+        args.timeout, args.validation_data_path, args.coordinator_addr
+    ))

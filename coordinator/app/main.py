@@ -98,6 +98,7 @@ async def batching_loop():
     a set threshold. The threshold is dynamically updated based on the number of workers available.
     """
     global inflight_semaphore
+    retained = None
     while True:
         requests = []
         futures = []
@@ -105,7 +106,11 @@ async def batching_loop():
         all_ids = []
         counts = []
 
-        req, fut = await request_queue.get()
+        if not retained:
+            req, fut = await request_queue.get()
+        else:
+            req, fut = retained
+            retained = None
         requests.append(req)
         futures.append(fut)
         all_texts.extend(req.texts)
@@ -122,7 +127,7 @@ async def batching_loop():
             try:
                 req, fut = await asyncio.wait_for(request_queue.get(), timeout=max(0, timeout))
                 if len(all_texts) + len(req.texts) > MAX_BATCH_SIZE:
-                    await request_queue.put((req, fut))
+                    retained = (req, fut)  # Retain the request that exceeds the batch size
                     break
                 requests.append(req)
                 futures.append(fut)
